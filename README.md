@@ -24,7 +24,8 @@ sequenceDiagram
 ```
 
 
-The detailed blog article explaining this process is available at: https://blog.vechain.energy/5643bc9ac301
+- The detailed blog article explaining this process is available at: https://blog.vechain.energy/how-to-verify-a-data-source-b6709ab6b925
+- The example web application is available at: https://vechain-energy.github.io/poc-verify-source/
 
 # Components
 
