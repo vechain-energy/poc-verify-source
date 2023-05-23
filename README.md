@@ -24,7 +24,7 @@ sequenceDiagram
 ```
 
 
-- The detailed blog article explaining this process is available at: https://blog.vechain.energy/how-to-verify-a-data-source-b6709ab6b925
+- The detailed blog article explaining this process is available at: https://blog.vechain.energy/b6709ab6b925
 - The example web application is available at: https://vechain-energy.github.io/poc-verify-source/
 
 # Components
@@ -70,3 +70,5 @@ Here are some important values and outputs:
 - Public Address: `0x9653fCC59c221863FAD440163dE3DA17cC399C0e`
 - Echo Deployment: `0x164ad9d4291e4E0FDA6fB3d36f46c99F73d1df05`
 - Backend Deployment: `https://verify-signature.example.vechain.energy/`
+- Demo-Website: https://vechain-energy.github.io/poc-verify-source/
+- Manage @ Contract Inspector: https://bit.ly/poc-verify-source
