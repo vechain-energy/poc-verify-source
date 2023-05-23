@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Sample Project for Signer-Verfication</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://unpkg.com/@vechain/connex"></script>
+    <script type="application/javascript">
+        /** configure contract, backend and ABI here */
+        const CONTRACT_ADDRESS = '0xe48FfeBb44ddD3A0c6231b0d743a684ebb423f8C'
+        const BACKEND_URL = 'https://verify-signature.example.vechain.energy/'
+
+        const ABI = {
+            message: {
+                "inputs": [],
+                "name": "message",
+                "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            setMessage: {
+                "inputs": [
+                    { "internalType": "string", "name": "_message", "type": "string" }
+                ],
+                "name": "setMessage",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            setMessageVerified: {
+                "inputs": [
+                    { "internalType": "string", "name": "_message", "type": "string" },
+                    { "internalType": "bytes", "name": "signature", "type": "bytes" }
+                ],
+                "name": "setMessageVerified",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        }
+    </script>
+
+    <script type="application/javascript">
+        async function updateMessage() {
+            const message = getUserMessage();
+            await requestTransaction(ABI.setMessage, message)
+        }
+
+        async function updateMessageSigned() {
+            const message = getUserMessage();
+            const signature = await getSignature(message)
+            await requestTransaction(ABI.setMessageVerified, message, signature)
+        }
+
+        async function getLatestMessage() {
+            log('loading current message...')
+            const { decoded: { '0': message } } = await connex.thor.account(CONTRACT_ADDRESS).method(ABI.message).call()
+            log('current message:', message)
+            updateDisplayMessage(message)
+        }
+    </script>
+</head>
+
+<body onLoad="getLatestMessage()">
+    <section class="section">
+        <article class="message is-primary">
+            <div class="message-header">
+                <p>Current Message</p>
+                <button class="button is-small is-rounded is-light is-info" onClick="getLatestMessage()">↻</button>
+            </div>
+            <div class="message-body" id="message">
+            </div>
+        </article>
+
+        <div class="columns">
+            <div class="column">
+                <button class="button is-primary is-fullwidth is-light" onClick="updateMessage()">
+                    call setMessage() without signature
+                </button>
+            </div>
+            <div class="column">
+                <button class="button is-primary is-fullwidth" onClick="updateMessageSigned()">
+                    call setMessageVerified() with signature
+                </button>
+            </div>
+        </div>
+
+        <hr noshade size="1" />
+
+        <div class="box">
+            <b>Log</b>
+            <pre class="content is-small has-background-white" id="log"></pre>
+        </div>
+
+    </section>
+</body>
+
+<script type="application/javascript">
+    const connex = new Connex({
+        node: 'https://testnet.veblocks.net/',
+        network: 'test'
+    })
+
+    function getUserMessage() {
+        const message = window.prompt('Please enter new message:');
+        if (!message) {
+            throw new Error('Canceled input.')
+        }
+
+        log('user input:', message)
+        return message
+    }
+
+    const updateDisplayMessage = (message) => document.getElementById("message").innerHTML = message || 'No Message'
+    const log = (...message) => document.getElementById("log").append([`[${(new Date()).toISOString().slice(11, -1)}]`, ...message, '\n'].join(' '))
+
+    async function getSignature(message) {
+        log('fetching signature from backend...')
+        const fetchRes = await fetch(`${BACKEND_URL}${encodeURIComponent(message)}`)
+        const signature = await fetchRes.text()
+        log('signature', signature)
+
+        return signature
+    }
+
+    async function requestTransaction(abi, ...args) {
+        try {
+            log('requesting user to sign transaction:', abi.name, '(', args.join(', '), ')')
+            const clause = connex.thor.account(CONTRACT_ADDRESS).method(abi).asClause(...args)
+            const tx = await connex.vendor.sign('tx', [clause])
+                .delegate('https://sponsor-testnet.vechain.energy/by/90')
+                .comment(`${abi.name} (${args.join(',')})`)
+                .request()
+            log('Transaction submitted, waiting for confirmation...',)
+            log(JSON.stringify(tx, null, 2))
+            updateDisplayMessage('Transaction submitted, waiting for confirmation...')
+            setTimeout(getLatestMessage, 15 * 1000)
+        }
+        catch (err) {
+            log('transaction request failed:', err.message)
+            updateDisplayMessage(`Update failed: ${err.message}`)
+        }
+    }
+</script>
+
+</html>

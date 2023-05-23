@@ -1,0 +1,7 @@
+name = "poc-verify-source-backend"
+main = "src/index.ts"
+compatibility_date = "2023-05-22"
+
+routes = [
+	{ pattern = "verify-signature.example.vechain.energy", custom_domain = true }
+]
